@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>net.bitnine.agens</groupId>
+  <artifactId>agens-spark-modules</artifactId>
+  <version>1.0-dev</version>
+  <packaging>pom</packaging>
+
+  <name>agens-spark-modules</name>
+  <description>Agens Spark Modules for AgensGraph v3</description>
+
+  <organization>
+    <name>Bitnine</name>
+    <url>http://bitnine.net/</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>maxmin93</id>
+      <name>Jason Min</name>
+      <email>maxmin93@gmail.com</email>
+    </developer>
+  </developers>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <scala.version>2.11.12</scala.version>
+    <scala.binary.version>2.11</scala.binary.version>
+    <elasticsearch.version>7.7.1</elasticsearch.version>
+    <spark.version>2.4.6</spark.version>
+    <xbean.version>4.10</xbean.version>
+    <morpheus.version>0.2.7</morpheus.version>
+    <hive.version>1.2.1.spark2</hive.version>
+    <livy.version>0.7.0-incubating</livy.version>
+    <graphframes.version>0.8.0-spark2.4-s_2.11</graphframes.version>
+  </properties>
+
+  <modules>
+    <module>spark-cypher</module>
+    <module>spark-connector</module>
+    <module>hive-storage-handler</module>
+    <module>livy-jobs</module>
+    <module>livy-test</module>
+  </modules>
+
+</project><!--
+** module: livy-jobs
+
+mvn archetype:generate -B \
+    -DarchetypeGroupId=net.alchim31.maven -DarchetypeArtifactId=scala-archetype-simple -DarchetypeVersion=1.7 \
+    -DgroupId=net.bitnine.agens -DartifactId=livy-jobs -Dversion=1.0-dev -Dpackage=net.bitnine.agens.livy
+
+** module: livy-test
+
+mvn archetype:generate -B \
+    -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4 \
+    -DgroupId=net.bitnine.agens -DartifactId=livy-test -Dversion=1.0-dev -Dpackage=net.bitnine.agens.livy-test
+
+-->

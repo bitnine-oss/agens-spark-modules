@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>agens-spark-modules</artifactId>
+    <groupId>net.bitnine.agens</groupId>
+    <version>1.0-dev</version>
+  </parent>
+
+  <groupId>net.bitnine.agens</groupId>
+  <artifactId>spark-cypher</artifactId>
+  <version>1.0-dev</version>
+  <packaging>jar</packaging>
+
+  <name>spark-cypher</name>
+  <description>Spark Cypher module Using Morpheus of org.opencypher</description>
+
+  <organization>
+    <name>Bitnine</name>
+    <url>http://bitnine.net/</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>maxmin93</id>
+      <name>Jason Min</name>
+      <email>maxmin93@gmail.com</email>
+    </developer>
+  </developers>
+
+  <!-- properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <scala.version>2.11.12</scala.version>
+    <scala.binary.version>2.11</scala.binary.version>
+    <morpheus.version>0.2.7</morpheus.version>
+    <elasticsearch.version>7.7.1</elasticsearch.version>
+    <hive.version>1.2.1.spark2</hive.version>
+    <spark.version>2.4.6</spark.version>
+    <xbean.version>4.10</xbean.version>
+    <graphframes.version>0.8.0-spark2.4-s_2.11</graphframes.version>
+  </properties -->
+
+  <dependencies>
+
+    <!-- Scala (not included) -->
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.version}</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>${scala.version}</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- Spark (not included) -->
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-core_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>provided</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.apache.xbean</groupId>
+                <artifactId>xbean-asm6-shaded</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <!-- this is necessary because the version bundled with Apache spark does not support Java 11 -->
+    <dependency>
+        <groupId>org.apache.xbean</groupId>
+        <artifactId>xbean-asm6-shaded</artifactId>
+        <version>${xbean.version}</version>
+        <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-sql_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!--
+    ERROR StatusLogger Log4j2 could not find a logging implementation.
+    Please add log4j-core to the classpath. Using SimpleLogger to log to the console...
+    -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-to-slf4j</artifactId>
+        <version>2.11.2</version>
+    </dependency>
+
+    <!-- for Cypher (above than 0.2.7 cannot working because scala 2.12 is not compatible) -->
+    <dependency>
+        <groupId>org.opencypher</groupId>
+        <artifactId>okapi-relational</artifactId>
+        <version>${morpheus.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.opencypher</groupId>
+        <artifactId>graph-ddl</artifactId>
+        <version>${morpheus.version}</version>
+    </dependency>
+
+    <!-- TEST -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.binary.version}</artifactId>
+      <version>3.2.2</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+            <skipTests>true</skipTests>
+            <trimStackTrace>false</trimStackTrace>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>4.3.1</version>
+        <executions>
+          <execution>
+            <id>scala-compile</id>
+            <goals>
+              <goal>add-source</goal>
+              <goal>compile</goal>
+            </goals>
+            <phase>process-resources</phase>
+          </execution>
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+          <scalaCompatVersion>${scala.binary.version}</scalaCompatVersion>
+          <args>
+            <arg>-Xmax-classfile-name</arg>
+            <arg>100</arg>
+            <arg>-target:jvm-1.8</arg>
+            <!-- arg>-deprecation</arg -->
+            <arg>-feature</arg>
+          </args>
+          <jvmArgs>
+            <jvmArg>-Xms64m</jvmArg>
+            <jvmArg>-Xmx1024m</jvmArg>
+          </jvmArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+            <archive>
+                <manifest>
+                    <mainClass>net.bitnine.agens.cypher.AgensCypher</mainClass>
+                    <addClasspath>true</addClasspath>
+                </manifest>
+            </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>net.bitnine.agens.cypher.AgensCypher</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+          <finalName>agens-${project.artifactId}-${project.version}</finalName>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <!-- TASK #1 -->
+          <execution>
+            <id>copy full-jar to remote</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <exec executable="scp">
+                  <arg value="target/agens-${project.artifactId}-${project.version}.jar" />
+                  <arg value="bgmin@mymac:~/Servers/extraJars" />
+                </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <!-- TASK #2 -->
+          <execution>
+            <id>copy full-jar to local</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy todir="/Users/bgmin/Servers/extraJars">
+                  <fileset dir="${basedir}/target" includes="agens-${project.artifactId}-${project.version}.jar" />
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

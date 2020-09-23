@@ -1,0 +1,13 @@
+{
+  "namespace": "net.bitnine.agens.avro",
+  "type": "record",
+  "name": "element",
+  "fields": [
+    { "name": "timestamp", "type": {
+        "type": "long", "logicalType": "timestamp-millis"
+      } },
+    { "name": "datasource", "type": "string" },
+    { "name": "label", "type": "string" },
+    { "name": "id", "type": "string" }
+  ]
+}
