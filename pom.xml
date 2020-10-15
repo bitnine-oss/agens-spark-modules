@@ -43,7 +43,7 @@
     <module>hive-storage-handler</module>
     <module>livy-jobs</module>
     <module>livy-test</module>
-    <!-- module>java-jdbc-test</module -->
+    <module>java-jdbc-test</module>
   </modules>
 
 </project><!--
