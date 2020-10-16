@@ -42,7 +42,7 @@ public class JdbcCypherTester implements JdbcTester {
     }
 
     public void run() throws Exception {
-        
+
         // replace "hive" here with the name of the user the queries should run as
         Connection conn = DriverManager.getConnection(
                 "jdbc:hive2://tonyne.iptime.org:20000/default",        // jdbc url
