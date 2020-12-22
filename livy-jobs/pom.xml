@@ -7,7 +7,6 @@
     <version>1.0-dev</version>
   </parent>
 
-  <groupId>net.bitnine.agens</groupId>
   <artifactId>livy-jobs</artifactId>
   <version>1.0-dev</version>
   <packaging>jar</packaging>
@@ -189,7 +188,7 @@
           <version>3.0.0</version>
           <executions>
             <!-- TASK #1 -->
-            <execution>
+            <!-- execution>
               <id>copy full-jar to remote</id>
               <phase>package</phase>
               <configuration>
@@ -203,7 +202,7 @@
               <goals>
                 <goal>run</goal>
               </goals>
-            </execution>
+            </execution -->
             <!-- TASK #2 -->
             <execution>
               <id>copy full-jar to local</id>

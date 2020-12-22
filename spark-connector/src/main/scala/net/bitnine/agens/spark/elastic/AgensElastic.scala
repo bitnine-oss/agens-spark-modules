@@ -73,6 +73,7 @@ spark-submit --executor-memory 1g \
 class AgensElastic(val conf: AgensConf=null) extends Serializable {
 
 	var client: RestHighLevelClient = null;
+	val AGG_BUCKET_SIZE: Int = 1000;
 
 	def open(): RestHighLevelClient = {
 		val builder = RestClient.builder(
@@ -114,7 +115,8 @@ class AgensElastic(val conf: AgensConf=null) extends Serializable {
 					AggregationBuilders.terms("datasources")
 							.field("datasource")
 							.order(BucketOrder.key(true))
-				)
+							.size(AGG_BUCKET_SIZE)
+				).size(0)
 		// request
 		val searchRequest = new SearchRequest(index)
 		searchRequest.source(searchSourceBuilder)

@@ -7,7 +7,6 @@
     <version>1.0-dev</version>
   </parent>
 
-  <groupId>net.bitnine.agens</groupId>
   <artifactId>spark-cypher</artifactId>
   <version>1.0-dev</version>
   <packaging>jar</packaging>
@@ -125,11 +124,12 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M5</version>
         <configuration>
-            <skipTests>true</skipTests>
-            <trimStackTrace>false</trimStackTrace>
+          <skipTests>true</skipTests>
+          <trimStackTrace>false</trimStackTrace>
         </configuration>
       </plugin>
       <plugin>
@@ -183,6 +183,7 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.3.0</version>
         <executions>
@@ -213,7 +214,7 @@
         <version>3.0.0</version>
         <executions>
           <!-- TASK #1 -->
-          <execution>
+          <!-- execution>
             <id>copy full-jar to remote</id>
             <phase>package</phase>
             <configuration>
@@ -227,7 +228,7 @@
             <goals>
               <goal>run</goal>
             </goals>
-          </execution>
+          </execution -->
           <!-- TASK #2 -->
           <execution>
             <id>copy full-jar to local</id>

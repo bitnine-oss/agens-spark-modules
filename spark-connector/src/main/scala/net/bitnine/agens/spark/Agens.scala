@@ -148,6 +148,19 @@ class Agens(spark: SparkSession, val conf: AgensConf) extends Serializable {
 //		GraphFrame(this.vertices(datasource), this.edges(datasource))
 //	}
 
+	def graphs(): PropertyGraph = {
+		val vlabels = meta.datasource().vertices.keys.toSet
+		val vertexTables:List[CAPSEntityTable] = vlabels.map{ label =>
+			readVertexAsTable(datasource, label)
+		}.toList
+		val elabels = meta.datasource(datasource).edges.keys.toSet
+		val edgeTables:List[CAPSEntityTable] = elabels.map{ label =>
+			readEdgeAsTable(datasource, label)
+		}.toList
+
+		session.readFrom(vertexTables ++ edgeTables)
+	}
+
 	def graph(datasource: String): PropertyGraph = {
 		val vlabels = meta.datasource(datasource).vertices.keys.toSet
 		val vertexTables:List[CAPSEntityTable] = vlabels.map{ label =>

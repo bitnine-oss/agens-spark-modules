@@ -53,7 +53,7 @@ object DataFrameOutputExample {
 /*
 spark-submit --executor-memory 1g \
 	--master spark://minmac:7077 \
-	--class net.bitnine.agens.opencypher.examples.DataFrameOutputExample \
+	--class net.bitnine.agens.cypher.examples.DataFrameOutputExample \
 	target/agens-spark-cypher-1.0-dev.jar
 
 */

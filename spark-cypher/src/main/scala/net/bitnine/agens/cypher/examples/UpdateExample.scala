@@ -58,7 +58,7 @@ CAPSNode(id=0x03, labels=Set(Person, Adult), properties=Map(name -> Carol's Mom,
 /*
 spark-submit --executor-memory 1g \
 	--master spark://minmac:7077 \
-	--class net.bitnine.agens.opencypher.examples.UpdateExample \
+	--class net.bitnine.agens.cypher.examples.UpdateExample \
 	target/agens-spark-cypher-1.0-dev.jar
 
 */

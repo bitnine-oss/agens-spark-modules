@@ -43,7 +43,7 @@ object DataSourceExample {
 /*
 spark-submit --executor-memory 1g \
 	--master spark://minmac:7077 \
-	--class net.bitnine.agens.opencypher.examples.DataSourceExample \
+	--class net.bitnine.agens.cypher.examples.DataSourceExample \
 	target/agens-spark-cypher-1.0-dev.jar
 
 */

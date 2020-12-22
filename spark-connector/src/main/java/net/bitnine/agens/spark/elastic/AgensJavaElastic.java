@@ -38,6 +38,9 @@ public final class AgensJavaElastic {
     private final AgensConf conf;
     private RestHighLevelClient client = null;
 
+    private static final int AGG_BUCKET_SIZE = 1000;
+    private static final String EXAMPLE_DS = "modern";
+
     public AgensJavaElastic(AgensConf conf){
         assert( conf != null && conf.host() != null && conf.port() != null );
         this.conf = conf;
@@ -80,7 +83,9 @@ public final class AgensJavaElastic {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchAllQuery())
                 .aggregation(AggregationBuilders.terms("datasources")
-                        .field("datasource").order(BucketOrder.key(true)));
+                        .field("datasource").order(BucketOrder.key(true))
+                        .size(AGG_BUCKET_SIZE)
+                ).size(0);
 
         // request
         SearchRequest searchRequest = new SearchRequest(index);
@@ -114,7 +119,9 @@ public final class AgensJavaElastic {
         searchSourceBuilder.query(QueryBuilders.boolQuery()
                 .must(termQuery("datasource", datasource)))
                 .aggregation(AggregationBuilders.terms("labels")
-                        .field("label").order(BucketOrder.key(true)));
+                        .field("label").order(BucketOrder.key(true))
+                        .size(AGG_BUCKET_SIZE)
+                ).size(0);
 
         // request
         SearchRequest searchRequest = new SearchRequest(index);
@@ -155,8 +162,10 @@ public final class AgensJavaElastic {
                 .filter(termQuery("label", label))
             )
             .aggregation(AggregationBuilders.nested("propAgg", "properties")
-                .subAggregation(AggregationBuilders.terms("keyAgg").field("properties.key"))
-            );
+                .subAggregation(
+                    AggregationBuilders.terms("keyAgg").field("properties.key").size(AGG_BUCKET_SIZE)
+                )
+            ).size(0);
         // request
         SearchRequest searchRequest = new SearchRequest(index);
         searchRequest.source(searchSourceBuilder);
@@ -200,7 +209,151 @@ public final class AgensJavaElastic {
                                         .order(BucketOrder.count(false)).size(1)
                                 )
                         )
-                );
+                ).size(0);
+        // request
+        SearchRequest searchRequest = new SearchRequest(index);
+        searchRequest.source(searchSourceBuilder);
+
+        Map<String, Tuple3<String,Long,Boolean>> result = new HashMap<>();
+        try {
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            // response
+            Aggregations aggregations = searchResponse.getAggregations();
+            Nested agg = aggregations.get("propAgg");
+            Terms keyAgg = agg.getAggregations().get("keyAgg");
+            keyAgg.getBuckets().forEach(b -> {
+                // keys : doc count
+                String keyValue = b.getKeyAsString();
+                long docCount = b.getDocCount();
+
+                // keys' Meta : type, count by agg, hasNull
+                Terms typeAgg = b.getAggregations().get("typeAgg");
+                String typeValue = typeAgg.getBuckets().get(0).getKeyAsString();
+                long aggCount = typeAgg.getBuckets().get(0).getDocCount();
+                result.put(keyValue, new Tuple3<>(typeValue, aggCount, docCount != aggCount));
+            });
+        }
+        catch (Exception ex){
+            // An empty catch block
+        }
+        finally { close(); }
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////
+
+    //////////////////////////////////////////
+    //
+    //  Whole labels, keys, keyTypes
+    //  ==> datasources 의 구분이 필요 없으므로 datasource 관련 함수가 없다
+    //  ==> 전체 : 'modern' 이 아닌 모든 datasource 대상
+    //
+
+    public scala.collection.immutable.Map<String, Long> LabelsToScala(String index){
+        return AgensJavaHelper.toScalaMap(labels(index));
+    }
+
+    public Map<String, Long> labels(String index) {
+        if( client == null ) client = open();
+
+        // query : aggregation
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+                .mustNot(termQuery("datasource", EXAMPLE_DS)))
+                .aggregation(AggregationBuilders.terms("labels")
+                        .field("label").order(BucketOrder.key(true))
+                        .size(AGG_BUCKET_SIZE)
+                ).size(0);
+
+        // request
+        SearchRequest searchRequest = new SearchRequest(index);
+        searchRequest.source(searchSourceBuilder);
+
+        Map<String, Long> result = new HashMap<>();
+        try {
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            // response
+            Aggregations aggregations = searchResponse.getAggregations();
+            Terms labels = aggregations.get("labels");
+            for (Terms.Bucket b : labels.getBuckets()) {
+                result.put(b.getKeyAsString(), b.getDocCount());
+            }
+        }
+        catch (Exception ex){
+            // An empty catch block
+        }
+        finally { close(); }
+
+        return result;
+    }
+
+    public scala.collection.immutable.Map<String, Long> keysToScala(String index, String label){
+        return AgensJavaHelper.toScalaMap(keys(index, label));
+    }
+
+    public Map<String, Long> keys(String index, String label) {
+        if( client == null ) client = open();
+
+        // query : aggregation
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        // searchSourceBuilder.size(0);
+
+        searchSourceBuilder
+                .query(QueryBuilders.boolQuery()
+                        .mustNot(termQuery("datasource", EXAMPLE_DS))
+                        .filter(termQuery("label", label))
+                )
+                .aggregation(AggregationBuilders.nested("propAgg", "properties")
+                        .subAggregation(
+                                AggregationBuilders.terms("keyAgg").field("properties.key").size(AGG_BUCKET_SIZE)
+                        )
+                ).size(0);
+        // request
+        SearchRequest searchRequest = new SearchRequest(index);
+        searchRequest.source(searchSourceBuilder);
+
+        Map<String, Long> result = new HashMap<>();
+        try {
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            // response
+            Aggregations aggregations = searchResponse.getAggregations();
+            Nested agg = aggregations.get("propAgg");
+            Terms keys = agg.getAggregations().get("keyAgg");
+            keys.getBuckets().forEach(b -> result.put(b.getKeyAsString(), b.getDocCount()));
+        }
+        catch (Exception ex){
+            // An empty catch block
+        }
+        finally { close(); }
+
+        return result;
+    }
+
+    public scala.collection.immutable.Map<String,Tuple3<String,Long,Boolean>> keytypesToScala(String index, String label){
+        return AgensJavaHelper.toScalaMap(keytypes(index, label));
+    }
+
+    // 3번째 원소 Boolean 값은 키의 타입이 통일되지 않았을 때 True: docCount != aggCount
+    public Map<String,Tuple3<String,Long,Boolean>> keytypes(String index, String label) {
+        if( client == null ) client = open();
+
+        // query : aggregation
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        // searchSourceBuilder.size(0);
+
+        searchSourceBuilder
+                .query(QueryBuilders.boolQuery()
+                        .mustNot(termQuery("datasource", EXAMPLE_DS))
+                        .filter(termQuery("label", label))
+                )
+                .aggregation(AggregationBuilders.nested("propAgg", "properties")
+                        .subAggregation(AggregationBuilders.terms("keyAgg").field("properties.key")
+                                .subAggregation(AggregationBuilders.terms("typeAgg").field("properties.type")
+                                        .order(BucketOrder.count(false)).size(1)
+                                )
+                        )
+                ).size(0);
         // request
         SearchRequest searchRequest = new SearchRequest(index);
         searchRequest.source(searchSourceBuilder);

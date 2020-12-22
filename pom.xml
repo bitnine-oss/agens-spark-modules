@@ -46,7 +46,9 @@
     <module>java-jdbc-test</module>
   </modules>
 
-</project><!--
+</project>
+
+<!--
 ** module: livy-jobs
 
 mvn archetype:generate -B \
@@ -58,5 +60,4 @@ mvn archetype:generate -B \
 mvn archetype:generate -B \
     -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4 \
     -DgroupId=net.bitnine.agens -DartifactId=livy-test -Dversion=1.0-dev -Dpackage=net.bitnine.agens.livy-test
-
 -->

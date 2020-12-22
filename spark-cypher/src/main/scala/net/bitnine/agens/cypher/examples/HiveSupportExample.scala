@@ -1,10 +1,9 @@
 package net.bitnine.agens.cypher.examples
 
+import net.bitnine.agens.cypher.api.CAPSSession
 import net.bitnine.agens.cypher.api.io.util.CAPSGraphExport.CanonicalTableExport
-import net.bitnine.agens.cypher.api.{CAPSSession, GraphSources}
 import net.bitnine.agens.cypher.api.io.util.HiveTableName
 import net.bitnine.agens.cypher.impl.CAPSConverters._
-
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
@@ -154,7 +153,7 @@ object HiveSupportExample {
 /*
 spark-submit --executor-memory 1g \
 	--master spark://minmac:7077 \
-	--class net.bitnine.agens.opencypher.examples.HiveSupportExample \
+	--class net.bitnine.agens.cypher.examples.HiveSupportExample \
 	target/agens-spark-cypher-1.0-dev.jar
 
 */

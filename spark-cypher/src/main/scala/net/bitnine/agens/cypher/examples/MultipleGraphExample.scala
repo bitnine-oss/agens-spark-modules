@@ -65,7 +65,7 @@ object MultipleGraphExample {
 /*
 spark-submit --executor-memory 2g \
 	--master spark://minmac:7077 \
-	--class net.bitnine.agens.opencypher.examples.MultipleGraphExample \
+	--class net.bitnine.agens.cypher.examples.MultipleGraphExample \
 	target/agens-spark-cypher-1.0-dev.jar
 
 ==>
