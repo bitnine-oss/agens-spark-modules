@@ -22,6 +22,8 @@ object AgensMeta {
 		val meta = new AgensMeta(conf.vertexIndex, conf.edgeIndex)
 		import meta._
 
+		// datasource 로 구분된 graph 리스트: vertex 기준으로 같은 datasource 에 edge 삽입
+		// all 포함 = 전체 graph (단, modern 은 제외)
 		for( (k,v) <- dsV ) {
 			// ** Error: return type ANY, type mismatch
 			//     dsE.get(k).getOrElse[Long](0)
@@ -29,6 +31,7 @@ object AgensMeta {
 			val ds = new MetaDatasource(k, v, dsE.get(k).getOrElse(0).asInstanceOf[Long])
 			meta.datasources.put(k, ds)
 
+			// vertices
 			val vlabelsTmp = elastic.labelsToScala(conf.vertexIndex, k).asInstanceOf[Map[String, Long]]
 			for( (kl,vl) <- vlabelsTmp ) {
 				val label = new MetaLabel(kl, vl, conf.vertexIndex)
@@ -41,6 +44,7 @@ object AgensMeta {
 				}
 			}
 
+			// edges
 			val elabelsTmp = elastic.labelsToScala(conf.edgeIndex, k).asInstanceOf[Map[String, Long]]
 			for( (kl,vl) <- elabelsTmp ) {
 				val label = new MetaLabel(kl, vl, conf.edgeIndex)
@@ -57,15 +61,17 @@ object AgensMeta {
 		meta
 	}
 
+/*
 	// ** Usage by curring
 	// ==> AgensMeta.datasource(datasource)(agens.conf)
 	//
-	def datasource(datasource: String)(conf: AgensConf): (Long,Long) = {
+	def datasources(datasource: String)(conf: AgensConf): (Long,Long) = {
 		assert(conf != null, "need to AgensConfig with initialization")
 		val elastic = new AgensJavaElastic(conf)
 
 		val dsV = elastic.datasourcesToScala(conf.vertexIndex)
 		val dsE = elastic.datasourcesToScala(conf.edgeIndex)
+
 		(dsV.getOrElse(datasource, 0L).asInstanceOf[Long], dsE.getOrElse(datasource, 0L).asInstanceOf[Long])
 	}
 
@@ -75,6 +81,7 @@ object AgensMeta {
 
 		val vlabelTmp = elastic.labelsToScala(conf.vertexIndex, datasource).asInstanceOf[Map[String, Long]]
 		val elabelTmp = elastic.labelsToScala(conf.edgeIndex, datasource).asInstanceOf[Map[String, Long]]
+
 		(vlabelTmp, elabelTmp)
 	}
 
@@ -84,12 +91,14 @@ object AgensMeta {
 		val elastic = new AgensJavaElastic(conf)
 
 		val vkeytypesTmp = elastic.keytypesToScala(conf.vertexIndex, datasource, label)
+
 		if( vkeytypesTmp.size > 0)
 			vkeytypesTmp.asInstanceOf[Map[String, (String,Long,Boolean)]]
 		else
-			elastic.keytypesToScala(conf.edgeIndex, datasource, label)
-					.asInstanceOf[Map[String, (String,Long,Boolean)]]
+			elastic.keytypesToScala(conf.edgeIndex, datasource, label).asInstanceOf[Map[String, (String,Long,Boolean)]]
 	}
+*/
+
 }
 
 

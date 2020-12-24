@@ -9,6 +9,9 @@ case class AgensConf(
 		var edgeIndex: String = "agensedge",
 		var tempPath: String = "/user/agens/temp"		// save Df using avro format
 ) {
+	val ALL_DS = "ALL"
+	val SAMPLE_DS = "modern"
+
 	def es = Map[String,String](
 		"es.nodes"->this.host,
 		"es.port"->this.port,

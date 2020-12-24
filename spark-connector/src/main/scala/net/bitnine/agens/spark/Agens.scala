@@ -148,18 +148,11 @@ class Agens(spark: SparkSession, val conf: AgensConf) extends Serializable {
 //		GraphFrame(this.vertices(datasource), this.edges(datasource))
 //	}
 
-	def graphs(): PropertyGraph = {
-		val vlabels = meta.datasource().vertices.keys.toSet
-		val vertexTables:List[CAPSEntityTable] = vlabels.map{ label =>
-			readVertexAsTable(datasource, label)
-		}.toList
-		val elabels = meta.datasource(datasource).edges.keys.toSet
-		val edgeTables:List[CAPSEntityTable] = elabels.map{ label =>
-			readEdgeAsTable(datasource, label)
-		}.toList
-
-		session.readFrom(vertexTables ++ edgeTables)
-	}
+	//////////////////////////////////////////
+	//
+	//  datasource({name}): 전체 labels, keys, keyTypes
+	//  ==> all (ALL_DS): 'modern' 이 아닌 모든 datasource 대상
+	//
 
 	def graph(datasource: String): PropertyGraph = {
 		val vlabels = meta.datasource(datasource).vertices.keys.toSet
@@ -262,9 +255,15 @@ class Agens(spark: SparkSession, val conf: AgensConf) extends Serializable {
 
 	// with datasource
 	private def elements(index: String, schema: StructType, datasource: String): DataFrame = {
-		val query: String = s"""{ "query": { "bool": {
-			   |  "must": { "term": { "datasource": "${datasource}" } }
-			   |}}}""".stripMargin.replaceAll("\n", " ")
+		assert(datasource != null)
+		val query: String = if( datasource == conf.ALL_DS )
+						s"""{ "query": { "bool": {
+							 |  "must_not": { "term": { "datasource": "${conf.SAMPLE_DS}" } }
+							 |}}}""".stripMargin.replaceAll("\n", " ")
+					else
+						s"""{ "query": { "bool": {
+								 |  "must": { "term": { "datasource": "${datasource}" } }
+								 |}}}""".stripMargin.replaceAll("\n", " ")
 		LOG.info(s"load Vertex Dataframe from '${datasource}'")
 		spark.read.format("org.elasticsearch.spark.sql")		// == format("es")
 				.options(conf.es)
@@ -285,10 +284,16 @@ class Agens(spark: SparkSession, val conf: AgensConf) extends Serializable {
 	// with datasource, labels
 	private def elements(index: String, schema: StructType, datasource: String, label: String): DataFrame = {
 		assert(datasource != null && label != null)
-		val query: String = s"""{ "query": { "bool": {
-			   |  "must": { "term": { "datasource": "${datasource}" } },
-			   |  "must": { "term": { "label": "${label}" } }
-			   |}}}""".stripMargin.replaceAll("\n", " ")
+		val query: String = if( datasource == conf.ALL_DS )
+			s"""{ "query": { "bool": {
+							 |  "must_not": { "term": { "datasource": "${conf.SAMPLE_DS}" } },
+							 |  "must": { "term": { "label": "${label}" } }
+							 |}}}""".stripMargin.replaceAll("\n", " ")
+		else
+			s"""{ "query": { "bool": {
+							 |  "must": { "term": { "datasource": "${datasource}" } },
+							 |  "must": { "term": { "label": "${label}" } }
+							 |}}}""".stripMargin.replaceAll("\n", " ")
 		spark.read.format("org.elasticsearch.spark.sql")		// == format("es")
 				.options(conf.es)
 				.option("es.query", query)

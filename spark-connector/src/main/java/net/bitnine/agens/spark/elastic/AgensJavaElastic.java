@@ -27,6 +27,7 @@ import scala.Tuple3;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
@@ -39,7 +40,6 @@ public final class AgensJavaElastic {
     private RestHighLevelClient client = null;
 
     private static final int AGG_BUCKET_SIZE = 1000;
-    private static final String EXAMPLE_DS = "modern";
 
     public AgensJavaElastic(AgensConf conf){
         assert( conf != null && conf.host() != null && conf.port() != null );
@@ -104,11 +104,17 @@ public final class AgensJavaElastic {
         }
         finally { close(); }
 
+        // size of ALL vertcies --> datasource 'ALL'
+        result.put(conf.ALL_DS(), result.values().stream().collect(Collectors.summingLong(Long::longValue)));
+
         return result;
     }
 
     public scala.collection.immutable.Map<String, Long> labelsToScala(String index, String datasource){
-        return AgensJavaHelper.toScalaMap(labels(index, datasource));
+        if(datasource == conf.ALL_DS())
+            return AgensJavaHelper.toScalaMap(labels(index));
+        else
+            return AgensJavaHelper.toScalaMap(labels(index, datasource));
     }
 
     public Map<String, Long> labels(String index, String datasource) {
@@ -146,7 +152,10 @@ public final class AgensJavaElastic {
     }
 
     public scala.collection.immutable.Map<String, Long> keysToScala(String index, String datasource, String label){
-        return AgensJavaHelper.toScalaMap(keys(index, datasource, label));
+        if(datasource == conf.ALL_DS())
+            return AgensJavaHelper.toScalaMap(keys(index, label));
+        else
+            return AgensJavaHelper.toScalaMap(keys(index, datasource, label));
     }
 
     public Map<String, Long> keys(String index, String datasource, String label) {
@@ -188,7 +197,10 @@ public final class AgensJavaElastic {
     }
 
     public scala.collection.immutable.Map<String,Tuple3<String,Long,Boolean>> keytypesToScala(String index, String datasource, String label){
-        return AgensJavaHelper.toScalaMap(keytypes(index, datasource, label));
+        if(datasource == conf.ALL_DS())
+            return AgensJavaHelper.toScalaMap(keytypes(index, label));
+        else
+            return AgensJavaHelper.toScalaMap(keytypes(index, datasource, label));
     }
 
     public Map<String,Tuple3<String,Long,Boolean>> keytypes(String index, String datasource, String label) {
@@ -250,17 +262,13 @@ public final class AgensJavaElastic {
     //  ==> 전체 : 'modern' 이 아닌 모든 datasource 대상
     //
 
-    public scala.collection.immutable.Map<String, Long> LabelsToScala(String index){
-        return AgensJavaHelper.toScalaMap(labels(index));
-    }
-
     public Map<String, Long> labels(String index) {
         if( client == null ) client = open();
 
         // query : aggregation
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.boolQuery()
-                .mustNot(termQuery("datasource", EXAMPLE_DS)))
+                .mustNot(termQuery("datasource", conf.SAMPLE_DS())))
                 .aggregation(AggregationBuilders.terms("labels")
                         .field("label").order(BucketOrder.key(true))
                         .size(AGG_BUCKET_SIZE)
@@ -288,10 +296,6 @@ public final class AgensJavaElastic {
         return result;
     }
 
-    public scala.collection.immutable.Map<String, Long> keysToScala(String index, String label){
-        return AgensJavaHelper.toScalaMap(keys(index, label));
-    }
-
     public Map<String, Long> keys(String index, String label) {
         if( client == null ) client = open();
 
@@ -301,7 +305,7 @@ public final class AgensJavaElastic {
 
         searchSourceBuilder
                 .query(QueryBuilders.boolQuery()
-                        .mustNot(termQuery("datasource", EXAMPLE_DS))
+                        .mustNot(termQuery("datasource", conf.SAMPLE_DS()))
                         .filter(termQuery("label", label))
                 )
                 .aggregation(AggregationBuilders.nested("propAgg", "properties")
@@ -330,10 +334,6 @@ public final class AgensJavaElastic {
         return result;
     }
 
-    public scala.collection.immutable.Map<String,Tuple3<String,Long,Boolean>> keytypesToScala(String index, String label){
-        return AgensJavaHelper.toScalaMap(keytypes(index, label));
-    }
-
     // 3번째 원소 Boolean 값은 키의 타입이 통일되지 않았을 때 True: docCount != aggCount
     public Map<String,Tuple3<String,Long,Boolean>> keytypes(String index, String label) {
         if( client == null ) client = open();
@@ -344,7 +344,7 @@ public final class AgensJavaElastic {
 
         searchSourceBuilder
                 .query(QueryBuilders.boolQuery()
-                        .mustNot(termQuery("datasource", EXAMPLE_DS))
+                        .mustNot(termQuery("datasource", conf.SAMPLE_DS()))
                         .filter(termQuery("label", label))
                 )
                 .aggregation(AggregationBuilders.nested("propAgg", "properties")
